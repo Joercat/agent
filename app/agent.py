@@ -1,9 +1,13 @@
+"""
+eBay Research Agent - Cerebras GPT OSS 120B
+"""
 
 import os
 import asyncio
 from typing import List, Dict, Any
 from cerebras.cloud.sdk import Cerebras
-from browser_use import Agent, Browser, BrowserConfig
+from browser_use import Agent, Browser
+from browser_use.browser.browser import BrowserConfig
 from browser_use.browser.context import BrowserContextConfig
 
 from controller import AgentController
@@ -12,7 +16,6 @@ from controller import AgentController
 class CerebrasGPTOSS:
     """
     Cerebras GPT OSS 120B wrapper
-    Optimized for agentic tasks - better instruction following
     """
     
     def __init__(self):
@@ -21,13 +24,10 @@ class CerebrasGPTOSS:
             raise ValueError("CEREBRAS_API_KEY not set")
         
         self.client = Cerebras(api_key=api_key)
-        self.model = "gpt-oss-120b"  # Optimized for agents
-        
-        # Track usage
+        self.model = "gpt-oss-120b"
         self.total_tokens = 0
     
     async def __call__(self, messages: List[Dict[str, str]], **kwargs) -> str:
-        """Generate completion"""
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -36,16 +36,13 @@ class CerebrasGPTOSS:
                 temperature=kwargs.get("temperature", 0.6),
                 top_p=0.95,
             )
-            
             self.total_tokens += response.usage.total_tokens
             return response.choices[0].message.content
-            
         except Exception as e:
             print(f"Cerebras API error: {e}")
             raise
     
     async def generate(self, prompt: str, **kwargs) -> str:
-        """Simple generate interface"""
         return await self([{"role": "user", "content": prompt}], **kwargs)
     
     def get_usage(self) -> int:
@@ -103,22 +100,20 @@ ALWAYS:
         self.llm = CerebrasGPTOSS()
     
     async def run(self, task: str) -> str:
-        """Execute research task"""
-        
-        browser = Browser(
-            config=BrowserConfig(
-                headless=False,
-                disable_security=True,
-                extra_chromium_args=[
-                    "--no-sandbox",
-                    "--disable-dev-shm-usage",
-                    "--disable-blink-features=AutomationControlled",
-                    "--disable-infobars",
-                    "--window-size=1366,768",
-                    "--window-position=0,0"
-                ]
-            )
+        browser_config = BrowserConfig(
+            headless=False,
+            disable_security=True,
+            extra_chromium_args=[
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-blink-features=AutomationControlled",
+                "--disable-infobars",
+                "--window-size=1366,768",
+                "--window-position=0,0"
+            ]
         )
+        
+        browser = Browser(config=browser_config)
         
         context_config = BrowserContextConfig(
             wait_for_network_idle_page_load_time=3.0,
@@ -152,21 +147,15 @@ INSTRUCTIONS:
         
         try:
             result = await agent.run(max_steps=100)
-            
-            # Log token usage
             await self.controller.log(
                 f"📊 Tokens used: {self.llm.get_usage():,}",
                 "info"
             )
-            
             return result
-            
         except StopIteration:
             return "Research stopped by user"
-            
         except Exception as e:
             await self.controller.log(f"Agent error: {e}", "error")
             raise
-            
         finally:
             await browser.close()
