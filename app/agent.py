@@ -6,9 +6,8 @@ import os
 import asyncio
 from typing import List, Dict, Any
 from cerebras.cloud.sdk import Cerebras
-from browser_use import Agent, Browser
-from browser_use.browser.browser import BrowserConfig
-from browser_use.browser.context import BrowserContextConfig
+from browser_use import Agent
+from browser_use.browser import Browser, BrowserConfig, BrowserContextConfig
 
 from controller import AgentController
 
@@ -75,14 +74,13 @@ SEARCH STRATEGIES:
    
 3. **Advanced filters**:
    - Check "Sold Items" for price history
-   - Compare "Buy It Now" vs auctions
-   - Look at ending soon auctions
-   
-4. **Hidden gems**:
-   - Search "lot" or "bundle" for mixed items
-   - Check "Parts/Not Working" for repairable items
-   - International listings (less competition)
+   - Compare the found item to each items approximate cost
 
+Important Rules to follow:
+   - Always find items that are "Buy It Now" instead of auctions, even though its harder.
+   - The final price of an item should be the max or lower, including after tax and shipping.
+   - If you can not tell if an item is a good deal, check with human, avoid submitting any unsure finds.
+   
 WHEN TO ASK HUMAN FOR HELP:
 - Found something but unsure of value/authenticity
 - Multiple promising leads, need prioritization
@@ -91,7 +89,7 @@ WHEN TO ASK HUMAN FOR HELP:
 
 ALWAYS:
 - Use 'Report interesting item' for any notable finds
-- Call 'Check if should continue' periodically
+- Call 'Check if should continue' periodically when you think its been a while
 - Be thorough - try multiple search angles
 - Note WHY something is a good find"""
 
@@ -100,28 +98,18 @@ ALWAYS:
         self.llm = CerebrasGPTOSS()
     
     async def run(self, task: str) -> str:
-        browser_config = BrowserConfig(
-            headless=False,
-            disable_security=True,
-            extra_chromium_args=[
-                "--no-sandbox",
-                "--disable-dev-shm-usage",
-                "--disable-blink-features=AutomationControlled",
-                "--disable-infobars",
-                "--window-size=1366,768",
-                "--window-position=0,0"
-            ]
-        )
-        
-        browser = Browser(config=browser_config)
-        
-        context_config = BrowserContextConfig(
-            wait_for_network_idle_page_load_time=3.0,
-            browser_window_size={"width": 1366, "height": 768},
-            user_agent=(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/121.0.0.0 Safari/537.36"
+        browser = Browser(
+            config=BrowserConfig(
+                headless=False,
+                disable_security=True,
+                extra_chromium_args=[
+                    "--no-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--disable-blink-features=AutomationControlled",
+                    "--disable-infobars",
+                    "--window-size=1366,768",
+                    "--window-position=0,0"
+                ]
             )
         )
         
