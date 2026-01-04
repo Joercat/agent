@@ -6,7 +6,12 @@ import os
 import asyncio
 from typing import List, Dict, Any
 from cerebras.cloud.sdk import Cerebras
-from browser_use import Agent, BrowserConfig, Browser
+
+# Auto-detect browser_use structure
+import browser_use
+print("browser_use exports:", [x for x in dir(browser_use) if not x.startswith('_')])
+
+from browser_use import Agent, Browser
 
 from controller import AgentController
 
@@ -97,31 +102,24 @@ ALWAYS:
         self.llm = CerebrasGPTOSS()
     
     async def run(self, task: str) -> str:
-        config = BrowserConfig(
+        browser = Browser(
             headless=False,
-            disable_security=True,
             extra_chromium_args=[
                 "--no-sandbox",
                 "--disable-dev-shm-usage",
                 "--disable-blink-features=AutomationControlled",
-                "--disable-infobars",
-                "--window-size=1366,768",
-                "--window-position=0,0"
+                "--window-size=1366,768"
             ]
         )
-        
-        browser = Browser(config=config)
         
         full_task = f"""RESEARCH TASK:
 {task}
 
 INSTRUCTIONS:
-- Search eBay thoroughly using multiple strategies
+- Search eBay thoroughly
 - Try misspellings and keyword variations  
-- Check both active listings and sold items
-- Report ALL interesting finds
-- Ask for human guidance when unsure
-- Be persistent - good deals are often hidden"""
+- Check both active and sold listings
+- Report any interesting finds"""
 
         agent = Agent(
             task=full_task,
@@ -136,8 +134,6 @@ INSTRUCTIONS:
                 "info"
             )
             return result
-        except StopIteration:
-            return "Research stopped by user"
         except Exception as e:
             await self.controller.log(f"Agent error: {e}", "error")
             raise
