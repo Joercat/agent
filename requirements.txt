@@ -1,0 +1,7 @@
+aiohttp==3.9.1
+aiofiles==23.2.1
+browser-use==0.1.40
+playwright==1.41.0
+cerebras-cloud-sdk==1.0.0
+duckduckgo-search==4.1.0
+beautifulsoup4==4.12.2
