@@ -6,8 +6,7 @@ import os
 import asyncio
 from typing import List, Dict, Any
 from cerebras.cloud.sdk import Cerebras
-from browser_use import Agent
-from browser_use.browser import Browser, BrowserConfig, BrowserContextConfig
+from browser_use import Agent, BrowserConfig, Browser
 
 from controller import AgentController
 
@@ -98,20 +97,20 @@ ALWAYS:
         self.llm = CerebrasGPTOSS()
     
     async def run(self, task: str) -> str:
-        browser = Browser(
-            config=BrowserConfig(
-                headless=False,
-                disable_security=True,
-                extra_chromium_args=[
-                    "--no-sandbox",
-                    "--disable-dev-shm-usage",
-                    "--disable-blink-features=AutomationControlled",
-                    "--disable-infobars",
-                    "--window-size=1366,768",
-                    "--window-position=0,0"
-                ]
-            )
+        config = BrowserConfig(
+            headless=False,
+            disable_security=True,
+            extra_chromium_args=[
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-blink-features=AutomationControlled",
+                "--disable-infobars",
+                "--window-size=1366,768",
+                "--window-position=0,0"
+            ]
         )
+        
+        browser = Browser(config=config)
         
         full_task = f"""RESEARCH TASK:
 {task}
@@ -128,13 +127,10 @@ INSTRUCTIONS:
             task=full_task,
             llm=self.llm,
             browser=browser,
-            controller=self.controller.browser_controller,
-            system_prompt_class=lambda: self.SYSTEM_PROMPT,
-            max_actions_per_step=5,
         )
         
         try:
-            result = await agent.run(max_steps=100)
+            result = await agent.run()
             await self.controller.log(
                 f"📊 Tokens used: {self.llm.get_usage():,}",
                 "info"
