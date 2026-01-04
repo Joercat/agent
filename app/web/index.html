@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eBay Research Agent</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="layout">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <span class="icon">🔍</span>
+                <h1>eBay Research Agent</h1>
+            </div>
+            <div id="status" class="status idle">Ready</div>
+        </header>
+
+        <!-- Main Content -->
+        <main>
+            <!-- Browser View -->
+            <section class="browser-section">
+                <div class="section-header">
+                    <span>Live Browser</span>
+                    <button id="fullscreen-btn" class="icon-btn" title="Fullscreen">⛶</button>
+                </div>
+                <iframe 
+                    id="vnc"
+                    src="/vnc/vnc.html?autoconnect=true&resize=scale&reconnect=true"
+                    allowfullscreen>
+                </iframe>
+            </section>
+
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <!-- Task -->
+                <section class="card">
+                    <h2>Research Task</h2>
+                    <textarea 
+                        id="task" 
+                        rows="4"
+                        placeholder="Example: Find vintage Sony Walkman WM-DD, check sold prices, look for misspellings..."></textarea>
+                    <div class="btn-group">
+                        <button id="start-btn" class="btn primary">🚀 Start</button>
+                        <button id="pause-btn" class="btn" disabled>⏸️</button>
+                        <button id="stop-btn" class="btn danger" disabled>🛑</button>
+                    </div>
+                </section>
+
+                <!-- Human Input -->
+                <section class="card">
+                    <h2>Help Agent</h2>
+                    <div id="question-box" class="question-box hidden"></div>
+                    <div class="input-group">
+                        <input type="text" id="human-input" placeholder="Your guidance..." disabled>
+                        <button id="send-btn" class="btn" disabled>→</button>
+                    </div>
+                </section>
+
+                <!-- Findings -->
+                <section class="card findings-card">
+                    <h2>Findings <span id="count" class="badge">0</span></h2>
+                    <div id="findings" class="findings"></div>
+                </section>
+
+                <!-- Log -->
+                <section class="card log-card">
+                    <h2>Activity</h2>
+                    <div id="log" class="log"></div>
+                </section>
+            </aside>
+        </main>
+    </div>
+    <script src="/static/app.js"></script>
+</body>
+</html>
