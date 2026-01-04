@@ -6,12 +6,8 @@ import os
 import asyncio
 from typing import List, Dict, Any
 from cerebras.cloud.sdk import Cerebras
-
-# Auto-detect browser_use structure
-import browser_use
-print("browser_use exports:", [x for x in dir(browser_use) if not x.startswith('_')])
-
-from browser_use import Agent, Browser
+from browser_use.agent.service import Agent
+from browser_use.browser.browser import Browser, BrowserConfig
 
 from controller import AgentController
 
@@ -55,7 +51,7 @@ class CerebrasGPTOSS:
 class EbayResearchAgent:
     """Main research agent"""
     
-    SYSTEM_PROMPT = """You are an expert eBay researcher and deal finder. 
+SYSTEM_PROMPT = """You are an expert eBay researcher and deal finder. 
 
 YOUR CAPABILITIES:
 - Navigate eBay efficiently
@@ -97,13 +93,15 @@ ALWAYS:
 - Be thorough - try multiple search angles
 - Note WHY something is a good find"""
 
+
     def __init__(self, controller: AgentController):
         self.controller = controller
         self.llm = CerebrasGPTOSS()
     
     async def run(self, task: str) -> str:
-        browser = Browser(
+        config = BrowserConfig(
             headless=False,
+            disable_security=True,
             extra_chromium_args=[
                 "--no-sandbox",
                 "--disable-dev-shm-usage",
@@ -112,6 +110,8 @@ ALWAYS:
             ]
         )
         
+        browser = Browser(config=config)
+        
         full_task = f"""RESEARCH TASK:
 {task}
 
@@ -119,7 +119,7 @@ INSTRUCTIONS:
 - Search eBay thoroughly
 - Try misspellings and keyword variations  
 - Check both active and sold listings
-- Report any interesting finds"""
+- Report ALL interesting finds"""
 
         agent = Agent(
             task=full_task,
